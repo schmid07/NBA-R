@@ -1,0 +1,258 @@
+---
+title: "NBA 3 Point Attempts"
+author: "Bill Schmid"
+date: "5/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(nbastatR)
+library(tidyverse)
+library(janitor)
+library(reactable)
+library(reactablefmtr)
+library(gghighlight)
+library(showtext)
+library(ggtext)
+library(gganimate)
+
+```
+
+```{r}
+df_team_shots <- read_csv(here::here("df_team_shots.csv"))
+```
+
+
+```{r}
+font_add_google("Nunito", "Nunito")
+showtext_auto()
+```
+
+
+
+```{r}
+df_threes <- df_team_shots %>% 
+  count(year_season, name_team, date_game, type_shot) %>% 
+  pivot_wider(names_from = type_shot, 
+              values_from = n) %>% 
+  clean_names() %>% 
+  mutate(more_threes = case_when(
+    x2pt_field_goal < x3pt_field_goal ~ 1,
+    TRUE ~ 0
+  )) %>% 
+  select(-x2pt_field_goal, -x3pt_field_goal)
+
+remove <- c("New Jersey Nets", "Charlotte Bobcats", "Seattle SuperSonics", "New Orleans Hornets")
+
+
+df_count_threes <- df_threes %>% 
+  count(year_season, more_threes) %>%
+  complete(year_season, nesting(more_threes), fill = list(n = 0)) %>% 
+  pivot_wider(
+    names_from = more_threes,
+    values_from = n) %>% 
+  clean_names() %>% 
+  mutate(total_games = x0 + x1,
+         perc_games = round(x1/total_games * 100, 1)) %>% 
+  select(-x0)
+
+df_count_threes_teams <- df_threes %>% 
+  add_count(year_season, name_team, wt = more_threes) %>% 
+  add_count(year_season, name_team) %>% 
+  distinct(
+    across(
+      c(year_season, name_team)
+      ),
+    .keep_all = TRUE
+    ) %>% 
+  filter(!name_team %in% remove) %>% 
+  mutate(name_team = recode(name_team, "LA Clippers" = "Los Angeles Clippers")) %>% 
+  mutate(perc = round(n/nn * 100, 1)) %>% 
+  select(-date_game)
+  
+
+df_threes_thresh <- df_team_shots %>% 
+  add_count(year_season, name_team, date_game, type_shot) %>%
+  add_count(year_season, name_team, date_game, type_shot, type_event) %>% 
+  filter(is_shot_made == "TRUE") %>% 
+  distinct(
+    across(
+      c(year_season, name_team, date_game, type_shot)
+      ), 
+    .keep_all = TRUE) %>% 
+  select(year_season, name_team, date_game, type_shot, n, nn) %>% 
+  mutate(fg_perc = round(nn/n, 2)) %>%
+  select(-n, -nn) %>% 
+  pivot_wider(names_from = type_shot, 
+              values_from = fg_perc) %>% 
+  left_join(df_threes) %>% 
+  clean_names() %>% 
+  mutate(three_combo = case_when(
+    more_threes == 1 & x2pt_field_goal < x3pt_field_goal ~ 1,
+    TRUE ~ 0
+    )) %>% 
+  count(year_season, wt = three_combo) %>% 
+  mutate(
+    total_games = case_when(
+    year_season == 2020 | year_season == 2021 ~ 72 * 30,
+    TRUE ~ 82 * 30
+    ),
+    perc = round(n/total_games, 3))
+
+
+
+  
+```
+
+```{r}
+tbl <- reactable(df_count_threes, 
+                 pagination = FALSE,
+                 highlight = TRUE,
+                 striped = TRUE,
+                 theme = espn(),
+                 details = function(index) {
+                   df_sub <- df_count_threes_teams[df_count_threes_teams$year_season == df_count_threes$year_season[index], ]
+                   htmltools::div(style = "padding: 16px",
+                                  reactable(df_sub, outlined = TRUE))
+})
+```
+
+```{r}
+tbl
+```
+
+```{r}
+df_count_threes_teams %>% 
+  ggplot(aes(x = year_season, y = perc, color = name_team)) + 
+  geom_line(size = 1.1) +
+  geom_point(size = 1.2) + 
+  gghighlight(use_direct_label = FALSE, use_group_by = FALSE) + 
+  scale_color_manual(values = rep("#C9082A", 35)) + 
+  facet_wrap(~ name_team) + 
+  scale_y_continuous(position = "right",
+                     labels = c("0", "30", "60%"),
+                     breaks = c(0, 30, 60),
+                     minor_breaks = c(0, 30, 60)) + 
+  scale_x_continuous(labels = c("'08", "'21"),
+                     breaks = c(2008, 2021)) + 
+  labs(
+    title = "What % of NBA games per year does a team attempt more 3-pt than 2-pt shots?",
+    subtitle = "Between the 2008 and 2014 seasons, a team attempting more 3-pt than 2-pt shots in a game occurred a combined 7x. The <b>Houston Rockets (6x)</b> in the 2015 <br> season were the first team to accomplish this more than once in a season. The Mike D'Antoni-led 2019 <b>Rockets</b> hold the single season record, attempting more <br> 3-pt than 2-pt shots in 49 of their 82 games (or 60%).",
+    caption = "Data Viz: Bill Schmid @schmid_07 | Source: {nbastatR}") +
+  theme_minimal() + 
+  theme(
+    axis.title = element_blank(),
+    plot.margin = margin(20, 60, 20, 60),
+    plot.background = element_rect(color = NA, fill = "grey98"),
+    plot.title = element_text(
+                            face = "bold",
+                            color = "grey10",
+                            margin = margin(b = 10),
+                            size = 23,
+                            family = "Nunito"),
+    plot.subtitle = element_markdown(size = 13,
+                                 family = "Nunito" ,
+                                 lineheight = 1.2,
+                                 color = "grey40",
+                                 margin = margin(b = 20)),
+    plot.title.position = "plot",
+    plot.caption.position = "plot",
+    plot.caption = element_text(color = "grey50", size = 10,
+                              hjust = 0, 
+                              family = "Nunito",
+                              margin = margin(t = 30)),
+    legend.position = "none",
+    axis.text = element_text(family = "Nunito",
+                             face = "bold",
+                             color = "grey60",
+                             size = 12),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.ticks = element_line(color = "grey60"),
+    strip.text = element_textbox(
+      color = "#fff9f5",
+      fill = "#17408B",
+      face = "bold",
+      family = "Nunito",
+      size = 12,
+      halign = .5,
+      padding = margin(5, 0, 1, 0),
+      # rounds corners
+      r = unit(7, "pt"),
+      width = unit(1, "npc"))) +
+  ggsave(here::here("threes_twit.png"), width = 15, height = 9)
+
+
+```
+
+```{r}
+animate_df_count <- df_count_threes_teams %>% 
+  ggplot(aes(x = year_season, y = perc, color = name_team)) + 
+  geom_line(size = 1.1) +
+  geom_point(size = 1.2) + 
+  gghighlight(use_direct_label = FALSE, use_group_by = FALSE) + 
+  scale_color_manual(values = rep("#C9082A", 35)) + 
+  facet_wrap(~ name_team) + 
+  scale_y_continuous(position = "right",
+                     labels = c("0", "30", "60%"),
+                     breaks = c(0, 30, 60),
+                     minor_breaks = c(0, 30, 60)) + 
+  scale_x_continuous(labels = c("'08", "'21"),
+                     breaks = c(2008, 2021)) + 
+  labs(
+    title = "What % of NBA games per year does a team attempt more 3-pt than 2-pt shots?",
+    subtitle = "Between the 2008 and 2014 seasons, a team attempting more 3-pt than 2-pt shots in a game occurred a combined 7x. The <b>Houston Rockets (6x)</b> in the 2015 <br> season were the first team to accomplish this more than once in a season. The Mike D'Antoni-led 2019 <b>Rockets</b> hold the single season record, attempting more <br> 3-pt than 2-pt shots in 49 of their 82 games (or 60%).",
+    caption = "Data Viz: Bill Schmid @schmid_07 | Source: {nbastatR}") +
+  theme_minimal() + 
+  theme(
+    axis.title = element_blank(),
+    plot.margin = margin(20, 60, 20, 60),
+    plot.background = element_rect(color = NA, fill = "grey98"),
+    plot.title = element_text(
+                            face = "bold",
+                            color = "grey10",
+                            margin = margin(b = 10),
+                            size = 23,
+                            family = "Nunito"),
+    plot.subtitle = element_markdown(size = 13,
+                                 family = "Nunito" ,
+                                 lineheight = 1.2,
+                                 color = "grey40",
+                                 margin = margin(b = 20)),
+    plot.title.position = "plot",
+    plot.caption.position = "plot",
+    plot.caption = element_text(color = "grey50", size = 10,
+                              hjust = 0, 
+                              family = "Nunito",
+                              margin = margin(t = 30)),
+    legend.position = "none",
+    axis.text = element_text(family = "Nunito",
+                             face = "bold",
+                             color = "grey60",
+                             size = 12),
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.ticks = element_line(color = "grey60"),
+    strip.text = element_textbox(
+      color = "#fff9f5",
+      fill = "#17408B",
+      face = "bold",
+      family = "Nunito",
+      size = 12,
+      halign = .5,
+      padding = margin(5, 0, 1, 0),
+      # rounds corners
+      r = unit(7, "pt"),
+      width = unit(1, "npc"))) +
+  transition_time(year_season)
+  
+```
+
+```{r}
+animate_df_count
+```
+
