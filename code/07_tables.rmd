@@ -1,0 +1,371 @@
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(include = FALSE, echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+
+```{r}
+library(nbastatR)
+library(tidyverse)
+library(janitor)
+library(showtext)
+library(imager)
+library(ggrepel)
+library(ggeconodist)
+library(reactable)
+library(reactablefmtr)
+library(teamcolors)
+library(blastula)
+library(htmltools)
+library(crosstalk)
+```
+
+```{r}
+font_add_google("Nunito", "Nunito")
+
+showtext_auto()
+
+# fun_season <- function(.x) {
+#   return(teams_shots(teams = vec_teams, seasons = .x))
+# }
+# 
+# vec_teams <- dictionary_bref_teams() %>% 
+#   filter(seasonLast == 2021) %>% 
+#   pull(nameTeamBREF)
+# 
+# df_team_shots <- map_df(.x = c(2008:2021),
+#                         .f = fun_season) %>% 
+#   clean_names()
+# 
+# write_csv(df_team_shots, here::here("df_team_shots.csv"))
+
+# horizontal dotted line for chart
+horizontals <- seq(.5, 14.5, 1)
+
+
+df_team_shots <- read_csv(here::here("df_team_shots.csv"))
+
+logo <- load.image(here::here("images", "nba_logo.png"))
+
+pal <- rcartocolor::carto_pal(n = 7, name = "DarkMint")
+
+
+```
+
+
+```{r}
+# df_headshots <- bref_players_stats(seasons = 2008:2021)
+# 
+# write_csv(df_headshots, here::here("data", "df_headshots.csv"))
+
+```
+
+
+```{r}
+df_headshot <- read_csv(here::here("data", "df_headshots.csv"))
+
+df_headshots <- df_headshot %>% 
+  clean_names() %>%
+  # if player played on multiple teams in a year, used team player was on at end of year
+  mutate(slugs_team_bref = str_extract_all(slug_teams_bref, "...$", 
+                                           simplify = TRUE)) %>% 
+  select(name_player, url_player_headshot, year_season, slugs_team_bref) 
+
+df_team_logos <- teamcolors %>% 
+  filter(league == "nba") %>% 
+  mutate(
+    img_name = str_replace(logo, ".*[/]([^.]+)[.].*", "\\1"),
+    img_name = glue::glue("https://raw.githubusercontent.com/schmid07/R-Reactable-NBA-Raptor/main/logos/{img_name}.png"))
+
+df_three <- df_team_shots %>% 
+  group_by(year_season, name_player) %>% 
+  mutate(games = n_distinct(date_game)) %>% 
+  drop_na(name_player) %>% 
+  # removed half court shots and beyond.  Also removed 256 instances where 3 PT 
+  # FGA was recorded despite being below corner 3 distance of 22 ft.
+  filter(type_shot == "3PT Field Goal", 
+         distance_shot < 47 & distance_shot >= 22) %>% 
+  add_count(year_season, name_player) %>%
+  mutate(three_fga_per = round(n / games, 1),
+         fgm = sum(is_shot_made == TRUE),
+         perc = round(fgm / n * 100, 1)) %>% 
+  # removed players with fewer than 41 3 pt fga
+  filter(n > 41, games > 41) %>% 
+  mutate(average_dist = round(mean(distance_shot), 2)) %>% 
+  filter(date_game == max(date_game)) %>% 
+  ungroup() %>% 
+  distinct(
+    across(
+      c(year_season, name_player)
+      ), 
+    .keep_all = TRUE) %>% 
+  left_join(df_headshots, by = c("name_player", "year_season")) %>% 
+  left_join(df_team_logos, by = c("name_team" = "name")) %>% 
+  mutate(year_season = as_factor(year_season)) %>% 
+  select(url_player_headshot, name_player, img_name, slugs_team_bref,
+         year_season, games, average_dist, three_fga_per, perc) %>% 
+  tidyr::fill(url_player_headshot) %>% 
+  mutate(url_player_headshot = if_else(
+    is.na(url_player_headshot), 
+    "https://raw.githubusercontent.com/schmid07/30-Day-Chart-Challenge/main/images/nba_logo.png", 
+    url_player_headshot)) %>% 
+    mutate(year_season = as_factor(year_season),
+         name_season = glue::glue("{name_player} {year_season}"))
+
+
+
+vec_perc <- df_three %>% 
+  filter(year_season == 2021) %>% 
+  summarise(percent = quantile(average_dist, c(.1, .5, .9))) %>% 
+  pull(percent)
+```
+
+```{r}
+crosstalk_data <- SharedData$new(df_three)
+
+team_filter <- filter_select(
+  id = "team",
+  label = "TEAM",
+  sharedData = crosstalk_data,
+  group = ~ slugs_team_bref
+)
+
+player_filter <- filter_select(
+  id = "player",
+  label = "PLAYER",
+  sharedData = crosstalk_data,
+  group = ~ name_player
+)
+
+season_filter <- filter_select(
+  id = "season",
+  label = "SEASON",
+  sharedData = crosstalk_data,
+  group = ~ year_season
+)
+
+```
+
+
+```{r}
+theme_538 <- function() {
+  reactable::reactableTheme(
+    searchInputStyle = list(width = "31%", backgroundColor = "#F9F9F9"),
+    backgroundColor = "#ece5d5",
+    headerStyle = list(
+      "&:hover[aria-sort]" = list(
+        background = "hsl(0, 0%, 80%)"),
+      "&[aria-sort='ascending'], &[aria-sort='descending']" = list(
+        background = "#555",
+        borderWidth = "3px",
+        color = "#FFF"
+      ),
+      borderColor = "#333"
+    ),
+    borderColor = "#CDCDCD"
+  )
+}
+
+options(reactable.theme = reactableTheme(
+  backgroundColor = "#ece5d5"
+))
+
+
+
+```
+
+```{r}
+tbl <- reactable(crosstalk_data, 
+          theme = theme_538,
+          defaultSorted = "average_dist",
+          showSortIcon = FALSE,
+          pagination = FALSE,
+          defaultColDef = colDef(align = "center",
+                                 minWidth = 55),
+          columns = list(
+            name_season = colDef(show = FALSE),
+            url_player_headshot = colDef(
+              cell = embed_img(df_three, 
+                               height = "33", 
+                               width = "40"
+                               ),
+              name = "",
+              minWidth = 30,
+              align = "right"),
+            slugs_team_bref = colDef(show= FALSE),
+            name_player = colDef(
+              name = "Player",
+              align = "left",
+              minWidth = 100
+              ),
+            img_name = colDef(
+              cell = embed_img(df_three,
+                               height = "33",
+                               width = "50",
+                               label = "slugs_team_bref"
+                     ),
+              name = "Team",
+              minWidth = 100),
+            year_season = colDef(
+              name = "Season",
+              minWidth = 50
+              ),
+            games = colDef(
+              name = "Games",
+              defaultSortOrder = "desc",
+              minWidth = 40
+              ),
+            average_dist = colDef(
+              name = "Avg. Distance (ft.)",
+              minWidth = 100,
+              defaultSortOrder = "desc",
+              cell = color_tiles(df_three, pal,
+                               number_fmt = scales::label_number(accuracy = .1))
+              ),
+            three_fga_per = colDef(
+              name = "3PT FGA/Game",
+              minWidth = 60,
+              defaultSortOrder = "desc",
+              cell = color_tiles(df_three, pal)
+              ),
+            perc = colDef(
+              name = "3PT FG%",
+              defaultSortOrder = "desc",
+              cell = color_tiles(df_three, pal)
+            )
+          )
+)
+```
+
+
+```{r}
+
+# to allow for annotation of player that shot from furthest avg distance
+vec_players <- df_three %>% 
+  group_by(year_season) %>% 
+  slice_max(average_dist, n = 1) %>%
+  pull(name_season)
+
+df_distance <- df_three %>% 
+  mutate(label = 
+           case_when(
+             name_player == "Trae Young" & year_season == 2021 ~ glue::glue("{name_player} (3 PT FGA/Game: {three_fga_per})"),
+             name_season %in% vec_players ~ glue::glue("{name_player} ({three_fga_per})"),
+             TRUE ~ ""))
+
+# to add in annotations for 10th percentile, median, 90th percentile
+vec_perc <- df_distance %>% 
+  filter(year_season == 2021) %>% 
+  summarise(percent = quantile(average_dist, c(.1, .5, .9))) %>% 
+  pull(percent)
+
+b <- ggplot(df_distance, aes(year_season, average_dist)) + 
+  geom_jitter(size = 1.2, alpha = .25, width = .1) +
+  geom_econodist(tenth_col = "#17408B",
+                 ninetieth_col = "#c9082a",
+                 median_col = "black",
+                 median_point_size = 5,
+                 fill = "white",
+                 color = "#D3D3D3",
+                 endcap_adjust = 2.5,
+                 show.legend = TRUE) +
+  geom_text_repel(
+    aes(label = label),
+    family = "Nunito",
+    color = "black",
+    size = 9/ .pt,
+    fontface = "bold",
+    point.padding = .1,
+    box.padding = .4,
+    seed = 12,
+    min.segment.length = 0
+  ) + 
+  geom_vline(xintercept = horizontals, linetype = "dashed", color = "#BEBEBE") +
+  scale_y_continuous(labels = paste0(seq(23, 27, 1), c(rep("", 4), " Feet")), 
+                     breaks = seq(23, 27, 1)) + 
+  coord_flip(clip = "off") +
+  annotate("segment", 
+           x = rep(14.3, 3), 
+           xend = rep( 14.8, 3), 
+           y = vec_perc, 
+           yend = vec_perc) + 
+  annotate("text", x = rep(15, 3), y = vec_perc, 
+           label = c("10th Percentile", "Median", "90th Percentile"),
+           family = "Nunito",
+           size = 4) + 
+  theme_minimal(base_family = "Nunito", base_size = 30) +
+  theme(
+    plot.margin = margin(20, 60, 20, 60),
+    plot.background = element_rect(color = NA, fill = "#ece5d5"),
+    axis.title = element_blank(),
+    axis.text = element_text(size = 25, face = "bold"),
+    axis.ticks.x = element_line(color = "#989898"),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank())
+
+```
+
+```{css, include = TRUE}
+
+.table-wrap {
+  box-shadow: 2px 3px 20px black;
+  background-color: #ece5d5;
+  font-family: "Fira Mono", Consolas, Monaco, monospace;
+  padding: 20px 20px 20px 20px;  
+}
+
+.table-subtitle {
+  font-size: 13px;
+  font-weight: 200;
+  font-family: "Fira Mono", Consolas, Monaco, monospace;
+  padding: 10px 10px 10px 10px;
+}
+  
+.table-title {
+  font-size: 40px;
+  font-weight: 600;
+  font-family: "Anton";
+}
+
+.drop-cap::first-letter {
+  color: #B22222;
+  float: left;
+  font-size: 70px;
+  line-height: 60px;
+  padding-top: 4px;
+  padding-right: 8px;
+  padding-left: 3px;
+}
+
+```
+
+```{r, include = TRUE}
+# div(class = "table-wrap",
+#   add_ggplot(b, width = 12, height = 12),
+#     tbl
+# )
+c <- here::here("nba_logo.png")
+d <- here::here("tester.mp4")
+curry <- here::here("curry.mp4")
+
+div(class = "table-wrap",
+    div(class = "table-title", "NBA Three Point Leaders", tags$img(src = c, align = "right", )),
+    br(),
+    div(tags$video(src = curry, width = 500, allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture", controls = "controls"),
+        align = "center"),
+    br(),
+    # add_ggplot(b, width = 12, height = 5),
+    br(),
+    div(bscols(
+      widths = c(3, 2, 2),
+      player_filter,
+      team_filter,
+      season_filter
+    )),
+    tbl,
+    "Table adapted from "
+)
+
+
+```
+
