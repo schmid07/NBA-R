@@ -1,5 +1,11 @@
 # NBA R
 
+## Team 3-pt FGA vs. 2-pt FGA
+
+### [README](https://github.com/schmid07/NBA-R/tree/main/plots/03) | [**Code**](https://github.com/schmid07/NBA-R/blob/main/code/03_threes_vs_two.Rmd)
+
+![plots/03/threes_twit.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/03/threes_twit.png)
+
 ## Average Distance 3-PT FGA
 
 ### [README](https://github.com/schmid07/NBA-R/tree/main/plots/02) | [**Code**](https://github.com/schmid07/NBA-R/blob/main/code/02_distributions.r)
