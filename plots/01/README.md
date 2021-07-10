@@ -1,4 +1,4 @@
-## Day 14 Relationships (Space) 🏀
+## Steph Curry Shot Chart (submitted as part of 30-day chart challenge)
 
 [**Code**](https://github.com/schmid07/30-Day-Chart-Challenge/blob/main/code/14_space.r)
 
