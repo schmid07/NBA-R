@@ -19,6 +19,10 @@
 ![plots/01/curry.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/01/curry.png)
 
 ## Which women's programs have been most successful during the NCAA Tournament era?
+
+### [**Interactive Version**](https://schmid07.github.io/NBA-R/plots/2020_41_bball_react.html)
+### [README](https://github.com/schmid07/NBA-R/tree/main/plots/01) | [**Code**](https://github.com/schmid07/NBA-R/blob/main/code/01_curry_shot_chart.r)
+
 <p align = "center">
 <img src = "http://g.recordit.co/aZGcdFsNET.gif" width = "700">
 </p>
