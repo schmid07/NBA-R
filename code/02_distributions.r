@@ -29,11 +29,6 @@ horizontals <- seq(.5, 14.5, 1)
 
 df_team_shots <- read_csv(here::here("data", "df_team_shots.csv"))
 
-trae <- df_team_shots %>% filter(name_player == "Trae Young",
-                                 year_season == 2021,
-                                 type_shot == "3PT Field Goal") %>% 
-  summarise(shot = mean(distance_shot))
-
 logo <- load.image(here::here("images", "nba_logo.png"))
 
 df_three <- df_team_shots %>% 
@@ -55,7 +50,7 @@ df_three <- df_team_shots %>%
          name_season = glue::glue("{name_player} {year_season}"))
 
 # to allow for annotation of player that shot from furthest avg distance
-vec_players <- df_distance %>% 
+vec_players <- df_three %>% 
   group_by(year_season) %>% 
   slice_max(average_dist, n = 1) %>%
   pull(name_season)
@@ -77,7 +72,7 @@ ggplot(df_distance, aes(year_season, average_dist)) +
   geom_jitter(size = 1.2, alpha = .25, width = .1) +
   geom_econodist(tenth_col = "#17408B",
                  ninetieth_col = "#c9082a",
-                 median_col = "#b54213",
+                 median_col = "grey40",
                  median_point_size = 7,
                  fill = "white",
                  color = "#D3D3D3",
@@ -97,9 +92,9 @@ ggplot(df_distance, aes(year_season, average_dist)) +
   geom_vline(xintercept = horizontals, linetype = "dashed", color = "#BEBEBE") +
   scale_y_continuous(labels = paste0(seq(23, 27, 1), c(rep("", 4), " Feet")), 
                      breaks = seq(23, 27, 1)) + 
-  annotation_raster(logo, xmin = 17.8, xmax = 19, ymin = 27.25, ymax = 27.35) +
-  labs(title = "Average Distance of Three Point Field Goal Attempts",
-       subtitle = "The below chart shows the average distance of three point attempts for each individual player in a given season. It excludes players with fewer than 41 attempts \nin a season and shots beyond halfcourt. The players that shot from the greatest average distance beyond the arc for each season are noted.",
+  annotation_raster(logo, xmin = 17.5, xmax = 19, ymin = 27.45, ymax = 27.6) +
+  labs(title = "Average Distance of 3-Point Field Goal Attempts",
+       subtitle = "The below chart shows the average distance of 3-point attempts for each individual player in a given season. It excludes shots beyond halfcourt and \nplayers with fewer than 41 attempts in a season. The players that shot from the greatest average distance beyond the arc for each season are noted.",
        caption = "Data Viz: Bill Schmid @schmid_07 | Source: {nbastatR}") +
   coord_flip(clip = "off") +
   annotate("segment", 
@@ -113,12 +108,14 @@ ggplot(df_distance, aes(year_season, average_dist)) +
            size = 4) + 
   theme_minimal(base_family = "Nunito", base_size = 30) +
   theme(
-    plot.title = element_text(size = 50,
+    plot.title = element_text(size = 45,
                               face = "bold",
-                              margin = margin(t = 35, b = 18)),
+                              color = "grey10",
+                              margin = margin(t = 35, b = 10)),
     plot.title.position = "plot",
-    plot.subtitle = element_text(size = 17,
-                                 family = "Nunito" ,
+    plot.subtitle = element_text(size = 20,
+                                 family = "Nunito",
+                                 color = "grey40",
                                  margin = margin(b = 40)),
     plot.margin = margin(20, 60, 20, 60),
     plot.caption = element_text(hjust = .95,
@@ -130,8 +127,6 @@ ggplot(df_distance, aes(year_season, average_dist)) +
     axis.text = element_text(size = 25, face = "bold"),
     axis.ticks.x = element_line(color = "#989898"),
     panel.grid.major = element_blank(), 
-    panel.grid.minor = element_blank())
-
-
-ggsave(here::here("plots", "07", "distance.png"), height = 11, width = 20)
+    panel.grid.minor = element_blank()) +
+  ggsave(here::here("plots", "02", "distance.png"), height = 11, width = 20)
 
