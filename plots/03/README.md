@@ -1,6 +1,6 @@
 ## NBA Twitter
 
-[**Code**](https://github.com/schmid07/30-Day-Chart-Challenge/blob/main/code/03_threes_vs_two.rmd)
+[**Code**](https://github.com/schmid07/NBA-R/blob/main/code/03_threes_vs_two.Rmd)
 
 The following question was asked on Twitter.
 
