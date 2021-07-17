@@ -30,6 +30,8 @@ df_team_shots <- read_csv(here::here("df_team_shots.csv"))
 ```{r}
 font_add_google("Nunito", "Nunito")
 showtext_auto()
+
+remove <- c("New Jersey Nets", "Charlotte Bobcats", "Seattle SuperSonics", "New Orleans Hornets")
 ```
 
 
@@ -45,9 +47,6 @@ df_threes <- df_team_shots %>%
     TRUE ~ 0
   )) %>% 
   select(-x2pt_field_goal, -x3pt_field_goal)
-
-remove <- c("New Jersey Nets", "Charlotte Bobcats", "Seattle SuperSonics", "New Orleans Hornets")
-
 
 df_count_threes <- df_threes %>% 
   count(year_season, more_threes) %>%
@@ -108,22 +107,6 @@ df_threes_thresh <- df_team_shots %>%
   
 ```
 
-```{r}
-tbl <- reactable(df_count_threes, 
-                 pagination = FALSE,
-                 highlight = TRUE,
-                 striped = TRUE,
-                 theme = espn(),
-                 details = function(index) {
-                   df_sub <- df_count_threes_teams[df_count_threes_teams$year_season == df_count_threes$year_season[index], ]
-                   htmltools::div(style = "padding: 16px",
-                                  reactable(df_sub, outlined = TRUE))
-})
-```
-
-```{r}
-tbl
-```
 
 ```{r}
 df_count_threes_teams %>% 
@@ -140,7 +123,7 @@ df_count_threes_teams %>%
   scale_x_continuous(labels = c("'08", "'21"),
                      breaks = c(2008, 2021)) + 
   labs(
-    title = "What % of NBA games per year does a team attempt more 3-pt than 2-pt shots?",
+    title = "How often per season do NBA teams attempt more 3-pt than 2-pt shots in a game?",
     subtitle = "Between the 2008 and 2014 seasons, a team attempting more 3-pt than 2-pt shots in a game occurred a combined 7x. The <b>Houston Rockets (6x)</b> in the 2015 <br> season were the first team to accomplish this more than once in a season. The Mike D'Antoni-led 2019 <b>Rockets</b> hold the single season record, attempting more <br> 3-pt than 2-pt shots in 49 of their 82 games (or 60%).",
     caption = "Data Viz: Bill Schmid @schmid_07 | Source: {nbastatR}") +
   theme_minimal() + 
@@ -184,75 +167,26 @@ df_count_threes_teams %>%
       # rounds corners
       r = unit(7, "pt"),
       width = unit(1, "npc"))) +
-  ggsave(here::here("threes_twit.png"), width = 15, height = 9)
+  ggsave(here::here("plots", "03", "threes_twit.png"), width = 15, height = 9)
 
 
 ```
 
+
 ```{r}
-animate_df_count <- df_count_threes_teams %>% 
-  ggplot(aes(x = year_season, y = perc, color = name_team)) + 
-  geom_line(size = 1.1) +
-  geom_point(size = 1.2) + 
-  gghighlight(use_direct_label = FALSE, use_group_by = FALSE) + 
-  scale_color_manual(values = rep("#C9082A", 35)) + 
-  facet_wrap(~ name_team) + 
-  scale_y_continuous(position = "right",
-                     labels = c("0", "30", "60%"),
-                     breaks = c(0, 30, 60),
-                     minor_breaks = c(0, 30, 60)) + 
-  scale_x_continuous(labels = c("'08", "'21"),
-                     breaks = c(2008, 2021)) + 
-  labs(
-    title = "What % of NBA games per year does a team attempt more 3-pt than 2-pt shots?",
-    subtitle = "Between the 2008 and 2014 seasons, a team attempting more 3-pt than 2-pt shots in a game occurred a combined 7x. The <b>Houston Rockets (6x)</b> in the 2015 <br> season were the first team to accomplish this more than once in a season. The Mike D'Antoni-led 2019 <b>Rockets</b> hold the single season record, attempting more <br> 3-pt than 2-pt shots in 49 of their 82 games (or 60%).",
-    caption = "Data Viz: Bill Schmid @schmid_07 | Source: {nbastatR}") +
-  theme_minimal() + 
-  theme(
-    axis.title = element_blank(),
-    plot.margin = margin(20, 60, 20, 60),
-    plot.background = element_rect(color = NA, fill = "grey98"),
-    plot.title = element_text(
-                            face = "bold",
-                            color = "grey10",
-                            margin = margin(b = 10),
-                            size = 23,
-                            family = "Nunito"),
-    plot.subtitle = element_markdown(size = 13,
-                                 family = "Nunito" ,
-                                 lineheight = 1.2,
-                                 color = "grey40",
-                                 margin = margin(b = 20)),
-    plot.title.position = "plot",
-    plot.caption.position = "plot",
-    plot.caption = element_text(color = "grey50", size = 10,
-                              hjust = 0, 
-                              family = "Nunito",
-                              margin = margin(t = 30)),
-    legend.position = "none",
-    axis.text = element_text(family = "Nunito",
-                             face = "bold",
-                             color = "grey60",
-                             size = 12),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    axis.ticks = element_line(color = "grey60"),
-    strip.text = element_textbox(
-      color = "#fff9f5",
-      fill = "#17408B",
-      face = "bold",
-      family = "Nunito",
-      size = 12,
-      halign = .5,
-      padding = margin(5, 0, 1, 0),
-      # rounds corners
-      r = unit(7, "pt"),
-      width = unit(1, "npc"))) +
-  transition_time(year_season)
-  
+tbl <- reactable(df_count_threes, 
+                 pagination = FALSE,
+                 highlight = TRUE,
+                 striped = TRUE,
+                 theme = espn(),
+                 details = function(index) {
+                   df_sub <- df_count_threes_teams[df_count_threes_teams$year_season == df_count_threes$year_season[index], ]
+                   htmltools::div(style = "padding: 16px",
+                                  reactable(df_sub, outlined = TRUE))
+})
 ```
 
 ```{r}
-animate_df_count
+tbl
 ```
 
