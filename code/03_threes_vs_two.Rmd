@@ -123,7 +123,7 @@ df_count_threes_teams %>%
   scale_x_continuous(labels = c("'08", "'21"),
                      breaks = c(2008, 2021)) + 
   labs(
-    title = "How often per season do NBA teams attempt more 3-pt than 2-pt shots in a game?",
+    title = "How often per season do NBA teams attempt more 3-pt than 2-pt shots?",
     subtitle = "Between the 2008 and 2014 seasons, a team attempting more 3-pt than 2-pt shots in a game occurred a combined 7x. The <b>Houston Rockets (6x)</b> in the 2015 <br> season were the first team to accomplish this more than once in a season. The Mike D'Antoni-led 2019 <b>Rockets</b> hold the single season record, attempting more <br> 3-pt than 2-pt shots in 49 of their 82 games (or 60%).",
     caption = "Data Viz: Bill Schmid @schmid_07 | Source: {nbastatR}") +
   theme_minimal() + 
