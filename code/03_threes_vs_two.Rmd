@@ -1,7 +1,7 @@
 ---
 title: "NBA 3 Point Attempts"
 author: "Bill Schmid"
-date: "5/24/2021"
+date: "7/20/2021"
 output: html_document
 ---
 
@@ -124,7 +124,7 @@ df_count_threes_teams %>%
                      breaks = c(2008, 2021)) + 
   labs(
     title = "How often per season do NBA teams attempt more 3-pt than 2-pt shots?",
-    subtitle = "Between the 2008 and 2014 seasons, a team attempting more 3-pt than 2-pt shots in a game occurred a combined 7x. The <b>Houston Rockets (6x)</b> in the 2015 <br> season were the first team to accomplish this more than once in a season. The Mike D'Antoni-led 2019 <b>Rockets</b> hold the single season record, attempting more <br> 3-pt than 2-pt shots in 49 of their 82 games (or 60%).",
+    subtitle = "Between the 2008 and 2014 seasons, a team attempting more 3s than 2s occurred in .04% (7x) of 16,738 games played. The <b>Houston Rockets</b> in the 2015 <br> season were the first team to accomplish this more than once in a season, shooting more 3s than 2s in 7%, or 6 of their 82 games. The Mike D'Antoni-led 2019  <br> <b>Rockets</b> hold the single season record, attempting more 3s than 2s in 60%, or 49 of their 82 games. In the 2021 season, a team attempted more 3s than 2s in <br> 9%, or 190 games of the total 2,160 games, the most of any season between 2008 and 2021.",
     caption = "Data Viz: Bill Schmid @schmid_07 | Source: {nbastatR}") +
   theme_minimal() + 
   theme(
@@ -139,7 +139,7 @@ df_count_threes_teams %>%
                             family = "Nunito"),
     plot.subtitle = element_markdown(size = 13,
                                  family = "Nunito" ,
-                                 lineheight = 1.2,
+                                 lineheight = 1.3,
                                  color = "grey40",
                                  margin = margin(b = 20)),
     plot.title.position = "plot",
@@ -172,21 +172,4 @@ df_count_threes_teams %>%
 
 ```
 
-
-```{r}
-tbl <- reactable(df_count_threes, 
-                 pagination = FALSE,
-                 highlight = TRUE,
-                 striped = TRUE,
-                 theme = espn(),
-                 details = function(index) {
-                   df_sub <- df_count_threes_teams[df_count_threes_teams$year_season == df_count_threes$year_season[index], ]
-                   htmltools::div(style = "padding: 16px",
-                                  reactable(df_sub, outlined = TRUE))
-})
-```
-
-```{r}
-tbl
-```
 
