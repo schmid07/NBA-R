@@ -1,0 +1,269 @@
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(include = FALSE, echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+library(nbastatR)
+library(tidyverse)
+library(janitor)
+library(reactable)
+library(reactablefmtr)
+library(gghighlight)
+library(showtext)
+library(ggtext)
+library(htmltools)
+library(teamcolors)
+
+```
+
+```{r}
+df_team_shots <- read_csv(here::here("df_team_shots.csv"))
+
+```
+
+
+```{r}
+
+recode_key <- c(NOH = "NO", NJN = "BKN")
+
+recode_key_2 <- c("LA Clippers" = "Los Angeles Clippers")
+
+remove <- c("New Jersey Nets", "Charlotte Bobcats", "Seattle SuperSonics", "New Orleans Hornets")
+
+df_team_names <- dictionary_bref_teams() %>% 
+  filter(seasonLast == 2021) %>% 
+  select(nameTeamBREF, slugTeamBREF) %>% 
+  mutate(slugTeamBREF = recode(slugTeamBREF, !!!recode_key))
+
+df_team_logos <- teamcolors %>% 
+  filter(league == "nba") %>% 
+  mutate(
+    img_name = str_replace(logo, ".*[/]([^.]+)[.].*", "\\1"),
+    img_name = glue::glue("https://raw.githubusercontent.com/schmid07/R-Reactable-NBA-Raptor/main/logos/{img_name}.png"))
+
+```
+
+
+```{r}
+options(reactable.theme = reactableTheme(
+  backgroundColor = "#fafafa",
+  borderColor = "#BEBEBE",
+  headerStyle = list(
+        "&:hover[aria-sort]" = list(background = "#E8E8E8"),
+        "&[aria-sort='ascending'], 
+        &[aria-sort='descending']" = list(background = "#C8C8C8"),
+        borderWidth = "2px"
+)))
+
+
+```
+
+
+
+```{r}
+df_threes <- df_team_shots %>% 
+  count(year_season, name_team, date_game, type_shot) %>% 
+  mutate(name_team = recode(name_team, !!!recode_key_2)) %>% 
+  left_join(df_team_names, by = c("name_team" = "nameTeamBREF")) %>%
+  left_join(df_team_logos, by = c("name_team" = "name")) %>% 
+  pivot_wider(names_from = type_shot, 
+              values_from = n) %>% 
+  clean_names() %>% 
+  mutate(more_threes = case_when(
+    x2pt_field_goal < x3pt_field_goal ~ 1,
+    TRUE ~ 0
+  )) %>% 
+  select(-x2pt_field_goal, -x3pt_field_goal) %>% 
+  rename(season = year_season)
+
+df_count_threes <- df_threes %>% 
+  count(season, more_threes) %>%
+  complete(season, nesting(more_threes), fill = list(n = 0)) %>% 
+  pivot_wider(
+    names_from = more_threes,
+    values_from = n) %>% 
+  clean_names() %>% 
+  mutate(total_games = x0 + x1,
+         perc_games = round(x1/total_games * 100, 1)) %>% 
+  select(season, total_games, x1, perc_games)
+
+df_count_threes_teams <- df_threes %>% 
+  add_count(season, name_team, wt = more_threes) %>% 
+  add_count(season, name_team) %>% 
+  distinct(
+    across(
+      c(season, name_team)
+      ),
+    .keep_all = TRUE
+    ) %>% 
+  filter(!name_team %in% remove) %>% 
+  mutate(perc = round(n/nn * 100, 1)) %>% 
+  select(season, img_name, slug_team_bref, nn, n, perc)
+  
+
+```
+
+
+```{css, include = TRUE}
+.table-wrap {
+  box-shadow: 2px 3px 20px black;
+  background-color: #fafafa;
+  font-family: Monaco;
+  padding: 20px 20px 20px 20px;  
+}
+
+.table-sub-back{
+  background-color: #f2f2f2;
+}
+
+.table-title {
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.table-sub {
+  font-size: 15px;
+  color: #6e6b6b;
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+.table-cap {
+  font-size: 12px;
+  font-weight: 100;
+}
+
+.border-bottom {
+  border-bottom: 2px solid #BEBEBE;
+  font-weight: 900;
+}
+
+# .drop-cap::first-letter {
+#   color: #B22222;
+#   float: left;
+#   font-size: 70px;
+#   line-height: 60px;
+#   padding-top: 4px;
+#   padding-right: 8px;
+#   padding-left: 3px;
+# }
+```
+
+
+```{r}
+pal <- rcartocolor::carto_pal(n = 7, name = "DarkMint")
+
+col_groups <- c("x1", "perc_games")
+col_groups_sub <- c("n", "perc")
+
+tbl <- reactable(df_count_threes, 
+                 pagination = FALSE,
+                 showSortIcon = FALSE,
+                 defaultSorted = "season",
+                  columnGroups = list(
+                    colGroup(name = "3-pt FGA > 2-pt FGA", 
+                             columns = col_groups,
+                             headerClass = "border-bottom")
+                    ),
+                 defaultColDef = colDef(align = "center"),
+                 details = function(index) {
+                   df_sub <-
+                     df_count_threes_teams[df_count_threes_teams$season ==
+                                             df_count_threes$season[index], ]
+                   htmltools::div(
+                     style = "padding: 16px",
+                     reactable(df_sub, 
+                               pagination = FALSE,
+                               class = "table-sub-back",
+                               outlined = TRUE,
+                               columnGroups = list(
+                                 colGroup(name = "3-pt FGA > 2-pt FGA", 
+                                          columns = col_groups_sub,
+                                          headerClass = "border-bottom")
+                                 ),
+                               defaultColDef = colDef(align = "center"),
+                               defaultSorted = "n",
+                               showSortIcon = FALSE,
+                               height = 750,
+                               width = 850,
+                               columns = list(
+                                 slug_team_bref = colDef(
+                                   show = FALSE
+                                   ),
+                                 nn = colDef(
+                                   name = "Total Team Games",
+                                   maxWidth = 155
+                                 ),
+                                 season = colDef(
+                                   show = FALSE
+                                 ),
+                                 perc = colDef(
+                                   name = "% of all games",
+                                   cell = color_tiles(df_sub, pal)
+                                 ),
+                                 img_name = colDef(
+                                   cell = embed_img(df_sub,
+                                                    height = "30",
+                                                    width = "45",
+                                                    label = "slug_team_bref"
+                                                    ),
+                                   name = "Team",
+                                   width = 100),
+                                   n = colDef(
+                                   name = "Games",
+                                   defaultSortOrder = "desc",
+                                   cell = data_bars(df_sub, 
+                                                    fill_color = "#1d428a")
+                                   )
+                                 )
+                               )
+                     )
+                   },
+                 columns = list(
+                   season = colDef(
+                     defaultSortOrder = "desc",
+                     maxWidth = 80,
+                     name = "Season"
+                     ),
+                   total_games = colDef(
+                     maxWidth = 155,
+                     name = "Total Team Games",
+                     format = colFormat(separators = TRUE)
+                   ),
+                   x1 = colDef(
+                     name = "Games",
+                     cell = data_bars(df_count_threes, fill_color = "#1d428a")
+                     ),
+                   perc_games = colDef(
+                     name = "% of all games",
+                     cell = color_tiles(df_count_threes, pal)
+                   )
+                   )
+                 )
+
+```
+
+
+```{r, include = TRUE}
+ima <- here::here("nba_logo.png")
+
+div(class = "table-wrap",
+    br(),
+    div(class = "table-title", "How often per season do NBA teams attempt more 3 than 2-point shots?"),
+    br(),
+    div(class = "table-sub", "The below table highlights the sharp rise in 3-point FGA by looking at the number of games per season that teams attempted more 3 than 2-point shots in a game. Beginning with the 2015 season, there has been a significant increase in teams that have accomplished this. As shown in the dropdown for the 2019 season, the Mike D'Antoni-led Houston Rockets hold the record across the 2008-2021 period, attempting more 3 than 2-point shots in 49, or 60% of their 82 games."),
+    br(),
+    br(),
+    tbl,
+    tags$img(src = ima,
+                 align = "right",
+                 width = "25px",
+                 height = "50px"),
+    br(),
+    div(class = "table-cap", "TABLE: Bill Schmid @schmid_07 | Source: {nbastatR} |",
+        tags$a(href="https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/03/threes_twit.png", 
+               target = "_blank", "Original Graph"))
+  )
+```

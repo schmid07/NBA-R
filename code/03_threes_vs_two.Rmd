@@ -18,7 +18,6 @@ library(reactablefmtr)
 library(gghighlight)
 library(showtext)
 library(ggtext)
-library(gganimate)
 
 ```
 
