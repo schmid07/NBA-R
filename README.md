@@ -1,6 +1,10 @@
 # NBA R
 
-## Team 3-pt FGA vs. 2-pt FGA
+## Team 3-pt FGA vs. 2-pt FGA (table)
+
+### [**Interactive Version**](https://schmid07.github.io/NBA-R/plots/05/04_threes_vs_two_table.html)
+
+## Team 3-pt FGA vs. 2-pt FGA (graph)
 
 ### [README](https://github.com/schmid07/NBA-R/tree/main/plots/03) | [**Code**](https://github.com/schmid07/NBA-R/blob/main/code/03_threes_vs_two.Rmd)
 
@@ -27,6 +31,4 @@
 <img src = "http://g.recordit.co/aZGcdFsNET.gif" width = "700">
 </p>
 
-## Team 3-pt FGA vs. 2-pt FGA
 
-### [**Interactive Version**](https://schmid07.github.io/NBA-R/plots/05/04_threes_vs_two_table.html)
