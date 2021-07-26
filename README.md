@@ -9,7 +9,6 @@
 </p>
 
 
-
 ### [README](https://github.com/schmid07/NBA-R/tree/main/plots/05) | [**Code**](https://github.com/schmid07/NBA-R/blob/main/code/05_threes_vs_two_table.Rmd)
 
 ## Team 3-pt FGA vs. 2-pt FGA (graph)
