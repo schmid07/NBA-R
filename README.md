@@ -26,3 +26,7 @@
 <p align = "center">
 <img src = "http://g.recordit.co/aZGcdFsNET.gif" width = "700">
 </p>
+
+## Team 3-pt FGA vs. 2-pt FGA
+
+### [**Interactive Version**](https://schmid07.github.io/NBA-R/plots/05/04_threes_vs_two_table.html)
