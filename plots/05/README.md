@@ -15,4 +15,4 @@ The below table answers the first part of this question.
 </p>
 
 Static Version:
-![plots/05/threes_vs_two_table.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/05/threes_vs_two_table.png)
+![plots/05/threes_vs_two_table.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/05/05_threes_vs_two_table.png)
