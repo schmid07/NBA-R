@@ -270,3 +270,8 @@ div(class = "table-wrap",
   )
 
 ```
+
+```{r}
+save_reactable(here::here("code", "05_threes_vs_two_table.Rmd"), here::here("plots", "05", "05_threes_vs_two_table.png"))
+```
+
