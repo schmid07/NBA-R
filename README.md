@@ -7,7 +7,7 @@
 ### [README](https://github.com/schmid07/NBA-R/tree/main/plots/05) | [**Code**](https://github.com/schmid07/NBA-R/blob/main/code/05_threes_vs_two_table.Rmd)
 
 <p align = "center">
-<img src = "http://g.recordit.co/PWIxGeyikt.gif" width = "700">
+<img src = "http://g.recordit.co/ehqFfNwfl4.gif" width = "700">
 </p>
 
 

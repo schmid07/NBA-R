@@ -11,5 +11,5 @@ The answer is not often but more frequently in the 2020 (9 times) and 2021 seaso
 The below table answers the first part of this question.
 
 <p align = "center">
-<img src = "http://g.recordit.co/PWIxGeyikt.gif" width = "700">
+<img src = "http://g.recordit.co/ehqFfNwfl4.gif" width = "700">
 </p>
