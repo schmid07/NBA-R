@@ -8,11 +8,14 @@ The following question was asked on Twitter.
 
 The answer is not often but more frequently in the 2020 (9 times) and 2021 seasons (11 times). From 2008 to 2019, this happened a combined 6 times.
 
-The below table answers the first part of this question.
+The below tables and graph answer the first part of this question.
 
 <p align = "center">
 <img src = "http://g.recordit.co/ehqFfNwfl4.gif" width = "700">
 </p>
 
-### **Static Version**
+### **Static Version - Table**
 ![plots/05/threes_vs_two_table.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/05/05_threes_vs_two_table.png)
+
+### **Graph**
+![plots/03/threes_twit.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/03/threes_twit.png)
