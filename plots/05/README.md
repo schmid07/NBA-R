@@ -14,5 +14,5 @@ The below table answers the first part of this question.
 <img src = "http://g.recordit.co/ehqFfNwfl4.gif" width = "700">
 </p>
 
-Static Version:
+### [**Static Version**]
 ![plots/05/threes_vs_two_table.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/05/05_threes_vs_two_table.png)

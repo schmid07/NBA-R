@@ -10,6 +10,9 @@
 <img src = "http://g.recordit.co/ehqFfNwfl4.gif" width = "700">
 </p>
 
+### [**Static Version**]
+![plots/05/threes_vs_two_table.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/05/05_threes_vs_two_table.png)
+
 
 ### [README](https://github.com/schmid07/NBA-R/tree/main/plots/05) | [**Code**](https://github.com/schmid07/NBA-R/blob/main/code/05_threes_vs_two_table.Rmd)
 
