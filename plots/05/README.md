@@ -1,6 +1,6 @@
 ## NBA Twitter
 
-[**Code**](https://github.com/schmid07/NBA-R/blob/main/code/03_threes_vs_two.Rmd)
+[**Code**](https://github.com/schmid07/NBA-R/blob/main/code/05_threes_vs_two_table.Rmd)
 
 The following question was asked on Twitter.
 
