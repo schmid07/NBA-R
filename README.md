@@ -13,7 +13,9 @@
 ### **Static Version - Table**
 ![plots/05/threes_vs_two_table.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/05/05_threes_vs_two_table.png)
 
-### **Graph**
+### **Graph** 
+[**Code**](https://github.com/schmid07/NBA-R/blob/main/code/03_threes_vs_two.Rmd)
+
 ![plots/03/threes_twit.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/03/threes_twit.png)
 
 ## Average Distance 3-PT FGA
