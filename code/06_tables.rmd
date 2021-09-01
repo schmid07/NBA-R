@@ -1,0 +1,300 @@
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(include = FALSE, echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+
+```{r}
+library(nbastatR)
+library(tidyverse)
+library(janitor)
+library(showtext)
+library(imager)
+library(reactable)
+library(reactablefmtr)
+library(teamcolors)
+library(htmltools)
+library(crosstalk)
+```
+
+```{r}
+# fun_season <- function(.x) {
+#   return(teams_shots(teams = vec_teams, seasons = .x))
+# }
+# 
+# vec_teams <- dictionary_bref_teams() %>% 
+#   filter(seasonLast == 2021) %>% 
+#   pull(nameTeamBREF)
+# 
+# df_team_shots <- map_df(.x = c(2008:2021),
+#                         .f = fun_season) %>% 
+#   clean_names()
+# 
+# write_csv(df_team_shots, here::here("df_team_shots.csv"))
+
+# horizontal dotted line for chart
+
+
+df_team_shots <- read_csv(here::here("df_team_shots.csv"))
+
+pal <- rcartocolor::carto_pal(n = 7, name = "DarkMint")
+pal_2 <- rcartocolor::carto_pal(n = 7, name = "Peach")
+
+```
+
+
+```{r}
+# df_headshots <- bref_players_stats(seasons = 2008:2021)
+# 
+# write_csv(df_headshots, here::here("data", "df_headshots.csv"))
+
+```
+
+```{r}
+df_headshot <- read_csv(here::here("data", "df_headshots.csv"))
+
+df_headshots <- df_headshot %>% 
+  clean_names() %>%
+  # if player played on multiple teams in a year, used team player was on at end of year
+  mutate(slugs_team_bref = str_extract_all(slug_teams_bref, "...$", 
+                                           simplify = TRUE)) %>% 
+  select(name_player, url_player_headshot, year_season, slugs_team_bref) 
+
+df_three <- df_team_shots %>% 
+  group_by(year_season, name_player) %>% 
+  mutate(games = n_distinct(date_game)) %>% 
+  drop_na(name_player) %>% 
+  # removed half court shots and beyond.  Also removed 256 instances where 3 PT 
+  # FGA was recorded despite being below corner 3 distance of 22 ft.
+  filter(type_shot == "3PT Field Goal", 
+         distance_shot < 47 & distance_shot >= 22) %>% 
+  add_count(year_season, name_player) %>%
+  mutate(three_fga_per = round(n / games, 1),
+         fgm = sum(is_shot_made == TRUE),
+         perc = round(fgm / n * 100, 1)) %>% 
+  # removed players with fewer than 41 3 pt fga
+  filter(n > 41, games > 41) %>% 
+  mutate(average_dist = round(mean(distance_shot), 2)) %>% 
+  filter(date_game == max(date_game)) %>% 
+  ungroup() %>% 
+  distinct(
+    across(
+      c(year_season, name_player)
+      ), 
+    .keep_all = TRUE) %>% 
+  left_join(df_headshots, by = c("name_player", "year_season")) %>% 
+  mutate(year_season = as_factor(year_season)) %>% 
+  select(url_player_headshot, name_player, slugs_team_bref,
+         year_season, games, average_dist, three_fga_per, perc) %>% 
+  tidyr::fill(url_player_headshot) %>% 
+  mutate(url_player_headshot = if_else(
+    is.na(url_player_headshot), 
+    "https://raw.githubusercontent.com/schmid07/30-Day-Chart-Challenge/main/images/nba_logo.png", 
+    url_player_headshot)) %>% 
+    mutate(year_season = as_factor(year_season),
+         name_season = glue::glue("{name_player} {year_season}"))
+
+```
+
+```{r}
+crosstalk_data <- SharedData$new(df_three)
+
+team_filter <- filter_select(
+  id = "team",
+  label = "TEAM",
+  sharedData = crosstalk_data,
+  group = ~ slugs_team_bref
+)
+
+player_filter <- filter_select(
+  id = "player",
+  label = "PLAYER",
+  sharedData = crosstalk_data,
+  group = ~ name_player
+)
+
+season_filter <- filter_select(
+  id = "season",
+  label = "SEASON",
+  sharedData = crosstalk_data,
+  group = ~ year_season
+)
+
+```
+
+
+```{r}
+# theme_538 <- function() {
+#   reactable::reactableTheme(
+#     searchInputStyle = list(width = "31%", backgroundColor = "#F9F9F9"),
+#     backgroundColor = "#ece5d5",
+#     headerStyle = list(
+#       "&:hover[aria-sort]" = list(
+#         background = "hsl(0, 0%, 80%)"),
+#       "&[aria-sort='ascending'], &[aria-sort='descending']" = list(
+#         background = "#555",
+#         borderWidth = "3px",
+#         color = "#FFF"
+#       ),
+#       borderColor = "#333"
+#     ),
+#     borderColor = "#CDCDCD"
+#   )
+# }
+
+options(reactable.theme = reactableTheme(
+  backgroundColor = "#fafafa",
+  borderColor = "#BEBEBE",
+  headerStyle = list(
+        "&:hover[aria-sort]" = list(background = "#E8E8E8"),
+        "&[aria-sort='ascending'], 
+        &[aria-sort='descending']" = list(background = "#C8C8C8"),
+        borderWidth = "2px"
+)))
+
+
+
+```
+
+```{r}
+tbl <- reactable(crosstalk_data, 
+          defaultSorted = "average_dist",
+          showSortIcon = FALSE,
+          pagination = FALSE,
+          height = 600,
+          defaultColDef = colDef(align = "center"),
+          columns = list(
+            name_season = colDef(show = FALSE),
+            url_player_headshot = colDef(
+              cell = embed_img(df_three, 
+                               height = "33", 
+                               width = "45"
+                               ),
+              name = "",
+              minWidth = 30,
+              align = "right"),
+            slugs_team_bref = colDef(
+              name = "Team",
+              minWidth = 35
+            ),
+            name_player = colDef(
+              name = "Player",
+              align = "left",
+              minWidth = 80
+              ),
+            year_season = colDef(
+              name = "Season",
+              minWidth = 45
+              ),
+            games = colDef(
+              name = "Games",
+              defaultSortOrder = "desc",
+              minWidth = 35
+              ),
+            average_dist = colDef(
+              name = "Avg. Distance 3-PT FGA (ft.)",
+              minWidth = 150,
+              defaultSortOrder = "desc",
+              cell = data_bars(df_three,
+                               min_value = min(df_three$average_dist),
+                               max_value = max(df_three$average_dist),
+                               force_outside = c(min(df_three$average_dist), 
+                                                 min(df_three$average_dist) + .7),
+                               background = "#e3e3e3",
+                               text_size = 14,
+                               fill_color = pal,
+                               animation = "none",
+                               number_fmt = scales::label_number(accuracy = .1))
+              ),
+            three_fga_per = colDef(
+              name = "3-FGA/Game",
+              minWidth = 65,
+              defaultSortOrder = "desc",
+              cell = color_tiles(df_three, 
+                                 pal,
+                                 animation = "none")
+              ),
+            perc = colDef(
+              name = "3PT FG%",
+              minWidth = 50,
+              defaultSortOrder = "desc",
+              cell = color_tiles(df_three, 
+                                 pal_2,
+                                 animation = "none")
+            )
+          )
+)
+
+
+
+
+```
+
+
+```{css, include = TRUE}
+
+.table-wrap {
+  box-shadow: 2px 3px 20px black;
+  background-color: #fafafa;
+  font-family: Monaco;
+  color: #1a1a1a;
+  padding: 20px 20px 20px 20px;  
+}
+
+.table-title {
+  font-size: 30px;
+  line-height: 1.8;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.table-sub {
+  font-size: 22px;
+  color: #696565;
+}
+
+.table-cap {
+  font-size: 12px;
+  color: #696565
+  font-weight: 100;
+}
+
+
+```
+
+```{r, include = TRUE}
+title <- c("Average Distance of 3-PT FGA")
+
+subtitle <- c("By Player & Season, 2008-2021")  
+
+capt <- "TABLE: Bill Schmid @schmid_07 | Source: {nbastatR} |"
+
+ima <- here::here("nba_logo.png")           
+
+div(class = "table-wrap",
+    br(),
+    div(class = "table-title", title, align = "center"), 
+    div(class = "table-sub", subtitle, align = "center"), 
+    br(),
+    br(),
+    div(
+        bscols(
+          widths = c(3, 2, 2),
+          player_filter,
+          team_filter,
+          season_filter
+          )
+    ),
+    br(),
+    tbl,
+    tags$img(src = ima,
+                 align = "right",
+                 width = "25px",
+                 height = "50px"),
+    br(),
+    div(class = "table-cap", capt,
+        tags$a(href="https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/02/distance.png", target = "_blank", "Original Graph")))
+
+
+```
+
