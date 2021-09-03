@@ -1,10 +1,10 @@
 # NBA R
 
-## Average Distance 3-PT FGA
-
-### [README](https://github.com/schmid07/NBA-R/tree/main/plots/06) | [**Code**](https://github.com/schmid07/NBA-R/blob/main/code/06_tables.Rmd)
+## Average Distance 3-PT FGA (Interactive Table & Graph)
 
 ### [**Interactive Version - Table**](https://schmid07.github.io/NBA-R/plots/06/06_tables.html)
+
+[**Code**](https://github.com/schmid07/NBA-R/blob/main/code/06_tables.Rmd)
 
 <p align = "center">
 <img src = "http://g.recordit.co/0Bh41bx05Q.gif" width = "700">
@@ -14,9 +14,9 @@
 
 ![plots/02/distance.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/02/distance.png)
 
-## Team 3-pt FGA vs. 2-pt FGA 
+## Team 3-pt FGA vs. 2-pt FGA (Interactive Table & Graph)
 
-### [README](https://github.com/schmid07/NBA-R/tree/main/plots/05) | [**Code**](https://github.com/schmid07/NBA-R/blob/main/code/05_threes_vs_two_table.Rmd)
+### [README](https://github.com/schmid07/NBA-R/tree/main/plots/05) | [**Code Table**](https://github.com/schmid07/NBA-R/blob/main/code/05_threes_vs_two_table.Rmd) | [**Code Graph**]((https://github.com/schmid07/NBA-R/blob/main/code/03_threes_vs_two.Rmd)) 
 
 ### [**Interactive Version - Table**](https://schmid07.github.io/NBA-R/plots/05/05_threes_vs_two_table.html)
 
@@ -26,8 +26,6 @@
 
 ### **Static Version - Table**
 ![plots/05/threes_vs_two_table.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/05/05_threes_vs_two_table.png)
-
-[**Code**](https://github.com/schmid07/NBA-R/blob/main/code/03_threes_vs_two.Rmd)
 
 ![plots/03/threes_twit.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/03/threes_twit.png)
 
