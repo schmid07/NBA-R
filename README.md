@@ -2,7 +2,7 @@
 
 ## Average Distance 3-PT FGA (Interactive Table & Graph)
 
-### [README](https://github.com/schmid07/NBA-R/tree/main/plots/02) | [**Code Table**](https://github.com/schmid07/NBA-R/blob/main/code/06_tables.rmd) | [**Code Graph **](https://github.com/schmid07/NBA-R/blob/main/code/02_distributions.r) | [**Interactive Version - Table**](https://schmid07.github.io/NBA-R/plots/06/06_tables.html)
+### [README](https://github.com/schmid07/NBA-R/tree/main/plots/02) | [**Code Table**](https://github.com/schmid07/NBA-R/blob/main/code/06_tables.rmd) | [**Code Graph**](https://github.com/schmid07/NBA-R/blob/main/code/02_distributions.r) | [**Interactive Version - Table**](https://schmid07.github.io/NBA-R/plots/06/06_tables.html)
 
 <p align = "center">
 <img src = "http://g.recordit.co/0Bh41bx05Q.gif" width = "700">
