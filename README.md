@@ -10,10 +10,6 @@
 <img src = "http://g.recordit.co/0Bh41bx05Q.gif" width = "700">
 </p>
 
-### **Static Version - Table**
-![plots/05/threes_vs_two_table.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/05/05_threes_vs_two_table.png)
-
-### **Graph** 
 ### [README](https://github.com/schmid07/NBA-R/tree/main/plots/02) | [**Code**](https://github.com/schmid07/NBA-R/blob/main/code/02_distributions.r)
 
 ![plots/02/distance.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/02/distance.png)
@@ -31,7 +27,6 @@
 ### **Static Version - Table**
 ![plots/05/threes_vs_two_table.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/05/05_threes_vs_two_table.png)
 
-### **Graph** 
 [**Code**](https://github.com/schmid07/NBA-R/blob/main/code/03_threes_vs_two.Rmd)
 
 ![plots/03/threes_twit.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/03/threes_twit.png)
