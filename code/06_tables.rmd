@@ -1,18 +1,14 @@
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(include = FALSE, echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
-
 ```{r}
 library(nbastatR)
 library(tidyverse)
-library(janitor)
-library(showtext)
-library(imager)
 library(reactable)
 library(reactablefmtr)
-library(teamcolors)
 library(htmltools)
 library(crosstalk)
 ```
@@ -31,9 +27,6 @@ library(crosstalk)
 #   clean_names()
 # 
 # write_csv(df_team_shots, here::here("df_team_shots.csv"))
-
-# horizontal dotted line for chart
-
 
 df_team_shots <- read_csv(here::here("df_team_shots.csv"))
 
@@ -54,8 +47,8 @@ pal_2 <- rcartocolor::carto_pal(n = 7, name = "Peach")
 df_headshot <- read_csv(here::here("data", "df_headshots.csv"))
 
 df_headshots <- df_headshot %>% 
-  clean_names() %>%
-  # if player played on multiple teams in a year, used team player was on at end of year
+  janitor::clean_names() %>%
+  # if player played on multiple teams in a year, used team that player was on at end of year
   mutate(slugs_team_bref = str_extract_all(slug_teams_bref, "...$", 
                                            simplify = TRUE)) %>% 
   select(name_player, url_player_headshot, year_season, slugs_team_bref) 
@@ -86,13 +79,7 @@ df_three <- df_team_shots %>%
   mutate(year_season = as_factor(year_season)) %>% 
   select(url_player_headshot, name_player, slugs_team_bref,
          year_season, games, average_dist, three_fga_per, perc) %>% 
-  tidyr::fill(url_player_headshot) %>% 
-  mutate(url_player_headshot = if_else(
-    is.na(url_player_headshot), 
-    "https://raw.githubusercontent.com/schmid07/30-Day-Chart-Challenge/main/images/nba_logo.png", 
-    url_player_headshot)) %>% 
-    mutate(year_season = as_factor(year_season),
-         name_season = glue::glue("{name_player} {year_season}"))
+  tidyr::fill(url_player_headshot) 
 
 ```
 
@@ -101,23 +88,31 @@ crosstalk_data <- SharedData$new(df_three)
 
 team_filter <- filter_select(
   id = "team",
-  label = "TEAM",
+  label = "Team",
   sharedData = crosstalk_data,
   group = ~ slugs_team_bref
 )
 
 player_filter <- filter_select(
   id = "player",
-  label = "PLAYER",
+  label = "Player",
   sharedData = crosstalk_data,
   group = ~ name_player
 )
 
 season_filter <- filter_select(
   id = "season",
-  label = "SEASON",
+  label = "Season",
   sharedData = crosstalk_data,
   group = ~ year_season
+)
+
+fga_slider <- filter_slider(
+  id = "three_fga_per",
+  label = "3-FGA/Game",
+  column = ~ three_fga_per,
+  sharedData = crosstalk_data,
+  
 )
 
 ```
@@ -161,10 +156,9 @@ tbl <- reactable(crosstalk_data,
           defaultSorted = "average_dist",
           showSortIcon = FALSE,
           pagination = FALSE,
-          height = 600,
+          height = 700,
           defaultColDef = colDef(align = "center"),
           columns = list(
-            name_season = colDef(show = FALSE),
             url_player_headshot = colDef(
               cell = embed_img(df_three, 
                                height = "33", 
@@ -279,10 +273,11 @@ div(class = "table-wrap",
     br(),
     div(
         bscols(
-          widths = c(3, 2, 2),
+          widths = c(4, 2, 2, 3),
           player_filter,
           team_filter,
-          season_filter
+          season_filter,
+          fga_slider
           )
     ),
     br(),
@@ -294,6 +289,7 @@ div(class = "table-wrap",
     br(),
     div(class = "table-cap", capt,
         tags$a(href="https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/02/distance.png", target = "_blank", "Original Graph")))
+
 
 
 ```
