@@ -4,12 +4,16 @@
 
 ### [README](https://github.com/schmid07/NBA-R/tree/main/plots/07) | [**Code - Table**](https://github.com/schmid07/NBA-R/blob/main/code/08_win_exp.rmd) | [**Interactive Table**](https://schmid07.github.io/NBA-R/plots/07/07_win_exp.html)
 
+<p align = "center">
+<img src = "http://g.recordit.co/YSfAZi9PMv.gif" width = "700">
+</p>
+
 ## Average Distance 3-PT FGA (Interactive Table & Graph)
 
 ### [README](https://github.com/schmid07/NBA-R/tree/main/plots/02) | [**Code - Table**](https://github.com/schmid07/NBA-R/blob/main/code/06_tables.rmd) | [**Code - Graph**](https://github.com/schmid07/NBA-R/blob/main/code/02_distributions.r) | [**Interactive Table**](https://schmid07.github.io/NBA-R/plots/06/06_tables.html)
 
 <p align = "center">
-<img src = "http://g.recordit.co/YSfAZi9PMv.gif" width = "700">
+<img src = "http://g.recordit.co/0Bh41bx05Q.gif" width = "700">
 </p>
 
 ![plots/02/distance.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/02/distance.png)
