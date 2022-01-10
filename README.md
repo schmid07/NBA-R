@@ -2,7 +2,7 @@
 
 ## Expected Wins Versus Actual Wins
 
-### [README](https://github.com/schmid07/NBA-R/tree/main/plots/07) | [**Code - Table**](https://github.com/schmid07/NBA-R/blob/main/code/08_win_exp.rmd) | [**Interactive Table**](https://schmid07.github.io/NBA-R/plots/08/07_win_exp.html)
+### [README](https://github.com/schmid07/NBA-R/tree/main/plots/07) | [**Code - Table**](https://github.com/schmid07/NBA-R/blob/main/code/08_win_exp.rmd) | [**Interactive Table**](https://schmid07.github.io/NBA-R/plots/07/07_win_exp.html)
 
 ## Average Distance 3-PT FGA (Interactive Table & Graph)
 
