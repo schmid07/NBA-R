@@ -291,5 +291,5 @@ div(class = "table-wrap",
     div(class = "table-cap",
         tags$span(style = "font-weight:400", "TABLE:"), 
         caption)
-    )
+)
 ```
