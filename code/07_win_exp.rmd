@@ -95,6 +95,7 @@ df_win_ratio <- df_team_adj %>%
   mutate(points_diff = round((ptsTeam - points_allowed) / games_played, 1),
          ppg = round(ptsTeam / games_played, 1),
          opp_ppg = round(points_allowed / games_played, 1),
+         # pythagorean expectation; for more info see here https://en.wikipedia.org/wiki/Pythagorean_expectation and here https://fansided.com/2017/09/18/nylon-calculus-expected-win-totals-distribution/
          expected_wins = round(ptsTeam ^ 14 / (ptsTeam ^ 14 + points_allowed ^ 14) * games_played),
          win_diff = expected_wins - wins) %>% 
   select(slugTeamBREF, conference, img_name, wins, expected_wins, win_diff, ppg, opp_ppg, points_diff, mean_10)
