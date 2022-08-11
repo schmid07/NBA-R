@@ -8,7 +8,7 @@
 <img src = "http://g.recordit.co/ehqFfNwfl4.gif" width = "700">
 </p>
 
-![plots/05/threes_vs_two_table.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/05/05_threes_vs_two_table.png)
+![plots/05/threes_vs_two_table.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/05/05_threes_vs_two_table_demo.png)
 
 ## Expected Wins Versus Actual Wins
 
