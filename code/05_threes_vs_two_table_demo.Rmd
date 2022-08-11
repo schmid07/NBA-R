@@ -1,0 +1,311 @@
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(include = FALSE, echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+library(hoopR) # v.1.5.0
+library(tidyverse)
+library(reactable)
+library(reactablefmtr)
+library(showtext)
+library(htmltools)
+library(janitor)
+
+```
+
+```{r}
+recode_key <- c("Los Angeles Clippers" = "LA Clippers")
+
+# espn_nba_teams function only works in v1.8.0 of hoopR; could only get nba_leaguegamelog function to work in v1.5.0. Ran espn_nba_teams in v1.8.0, then saved as csv, then switched back to v1.5 to run nba_leagegamelog function.  Opened issue on hoopR github.
+
+# df_team_logo_espn <- espn_nba_teams() %>%
+#   select(abbreviation, display_name, logo)
+
+# write_csv(df_team_logo_espn, "nba_logos.csv")
+
+df_team_logo_espn <- read_csv(here::here("nba_logos.csv"))
+
+seasons <- year_to_season(2007:2021)
+
+df_team_shots_pull <- map_dfr(
+  seasons, ~ nba_leaguegamelog(
+    season = .,
+    player_or_team = "T",
+    season_type = "Regular Season"
+  )
+) %>%
+  pluck("LeagueGameLog") %>%
+  clean_names() %>%
+  mutate(across(c(fga, fg3a), as.numeric)) %>%
+  mutate(team_name = recode(team_name, !!!recode_key))
+
+# as noted above, needed to switch between hoopR v1.5 and v1.8 to pull necessary data; below function allows to switch between versions
+
+# require(devtools)
+# install_version("hoopR", version = "1.5.0", repos = "http://cran.us.r-project.org")
+
+```
+
+
+```{r}
+
+df_threes <- df_team_shots_pull %>%
+  # this game is listed in dataset but was never played due to Boston Marathon bombing; thus removed below.
+  filter(game_id != "0021201214") %>%
+  mutate(
+    season = as.integer(str_sub(season_id, 2)),
+    season = season + 1
+  ) %>%
+  select(season, game_date, fga, fg3a, team_abbreviation, team_name) %>%
+  mutate(
+    fg2a = fga - fg3a,
+    more_threes = case_when(
+      fg2a < fg3a ~ 1,
+      TRUE ~ 0
+    )
+  ) %>%
+  left_join(df_team_logo_espn, by = c("team_name" = "display_name"))
+
+# shows league-wide counts by season (3pt fga > 2pt fga)
+df_count_threes <- df_threes %>%
+  count(season, more_threes) %>%
+  complete(season, nesting(more_threes), fill = list(n = 0)) %>%
+  pivot_wider(
+    names_from = more_threes,
+    values_from = n
+  ) %>%
+  clean_names() %>%
+  mutate(
+    total_games = x0 + x1,
+    perc_games = round(x1 / total_games * 100, 1),
+    full_season = case_when(
+      total_games == 2460 ~ "Yes",
+      TRUE ~ "No"
+    ),
+    full_season_cols = case_when(
+      full_season == "Yes" ~ "darkgreen",
+      TRUE ~ "#c9082a"
+    )
+  ) %>%
+  select(season, full_season, full_season_cols, x1, perc_games)
+
+# shows team specific counts by season (3pt fga > 2pt fga)
+df_count_threes_teams <- df_threes %>%
+  clean_names() %>%
+  add_count(season, team_name, wt = more_threes) %>%
+  add_count(season, team_name) %>%
+  distinct(
+    across(
+      c(season, team_name)
+    ),
+    .keep_all = TRUE
+  ) %>%
+  mutate(perc = round(n / nn * 100, 1)) %>%
+  select(season, logo, team_abbreviation, n, perc) %>%
+  relocate(team_abbreviation, .before = logo)
+```
+
+```{r}
+options(reactable.theme = reactableTheme(
+  backgroundColor = "#fafafa",
+  borderColor = "#BEBEBE",
+  style = list(
+    fontFamily = "Fira Sans Condensed",
+    fontSize = "15px"
+  ),
+  headerStyle = list(
+    "&:hover[aria-sort]" = list(background = "#E8E8E8"),
+    "&[aria-sort='ascending'],
+        &[aria-sort='descending']" = list(background = "#C8C8C8"),
+    fontSize = "16px",
+    height = 35,
+    borderWidth = "2px"
+  )
+))
+```
+
+
+```{css, include = TRUE}
+.table-wrap {
+  box-shadow: 2px 3px 20px black;
+  background-color: #fafafa;
+  padding: 20px 20px 20px 20px;  
+}
+
+.table-sub-back{
+  background-color: #f2f2f2;
+}
+
+.table-title {
+  font-size: 30px;
+  color: #36454F;
+  font-family: Fira Sans Condensed;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.table-sub {
+  font-size: 16px;
+  color: #6e6b6b;
+  font-family: Fira Sans Condensed;
+  font-weight: 425;
+  line-height: 1.4;
+}
+
+.table-cap {
+  font-size: 12px;
+  color: #6e6b6b;
+  font-family: Fira Sans Condensed;
+  font-weight: 350;
+}
+```
+
+
+```{r}
+pal <- rcartocolor::carto_pal(n = 7, name = "DarkMint")
+
+tbl <- reactable(df_count_threes,
+  pagination = FALSE,
+  showSortIcon = FALSE,
+  highlight = TRUE,
+  defaultSorted = "season",
+  defaultColDef = colDef(
+    vAlign = "center",
+    align = "center"
+  ),
+  details = function(index) {
+    df_sub <-
+      df_count_threes_teams[df_count_threes_teams$season ==
+        df_count_threes$season[index], ]
+    htmltools::div(
+      style = "padding: 10px",
+      reactable(df_sub,
+        pagination = FALSE,
+        class = "table-sub-back",
+        highlight = TRUE,
+        outlined = TRUE,
+        defaultColDef = colDef(
+          align = "center",
+          vAlign = "center"
+        ),
+        defaultSorted = list(perc = "desc"),
+        showSortIcon = FALSE,
+        height = 750,
+        width = 850,
+        columns = list(
+          team_abbreviation = colDef(
+            name = "Team",
+            width = 55
+          ),
+          season = colDef(
+            show = FALSE
+          ),
+          perc = colDef(
+            name = "% of all games",
+            cell = color_tiles(df_sub, pal,
+              box_shadow = TRUE
+            )
+          ),
+          logo = colDef(
+            cell = embed_img(df_sub,
+              height = "35",
+              width = "40"
+            ),
+            width = 50,
+            name = ""
+          ),
+          n = colDef(
+            name = "3 > 2-pt FGA (# of times)",
+            cell = data_bars(df_sub,
+              box_shadow = TRUE,
+              round_edges = TRUE,
+              # ".." used to add padding to numbers in data bar
+              number_fmt = scales::label_number(suffix = "  "),
+              background = "transparent",
+              force_outside = c(0, 1),
+              fill_color = "#1d428a"
+            )
+          )
+        )
+      )
+    )
+  },
+  columns = list(
+    season = colDef(
+      defaultSortOrder = "desc",
+      maxWidth = 80,
+      name = "Season"
+    ),
+    full_season = colDef(
+      maxWidth = 135,
+      cell = pill_buttons(
+        data = df_count_threes,
+        color_ref = "full_season_cols",
+        box_shadow = TRUE,
+        opacity = 0.7
+      ),
+      html = TRUE,
+      name = "<p>82-Game Season <sup>1</sup></p>",
+    ),
+    x1 = colDef(
+      name = "3 > 2-pt FGA (# of times)",
+      cell = data_bars(df_count_threes,
+        force_outside = c(0, 10),
+        fill_color = "#1d428a",
+        # ".." used to add padding to numbers in data bar
+        number_fmt = scales::label_number(suffix = "  "),
+        background = "transparent",
+        round_edges = TRUE,
+        box_shadow = TRUE
+      )
+    ),
+    full_season_cols = colDef(show = FALSE),
+    perc_games = colDef(
+      name = "% of all games",
+      cell = color_tiles(df_count_threes, pal,
+        box_shadow = TRUE
+      )
+    )
+  )
+)
+```
+
+
+```{r, include = TRUE}
+ima <- here::here("nba_logo.png")
+
+title_text <- c("How often do NBA teams attempt more 3 than 2-point shots?")
+
+subtitle_text <- c("The below table highlights the sharp rise in 3-point FGA by looking at the number of games per season that teams attempted more 3 than 2-point shots in a game. Since the 2015 season, there has been a significant increase in the number of times this has happened, although there was a decline from the 2021 to 2022 seasons. As shown in the dropdown, the Mike D'Antoni-led Houston Rockets hold the record across the 2008-2022 period, attempting more 3 than 2-point shots in 49, or 60% of their 82 games during the 2019 season.")
+
+footnote_text <- HTML("<p><sup> 1</sup> The 2020 and 2021 seasons were shortened due to COVID. Teams played between 63 and 67 games in the 2019 season and 72 games in the 2020 season. All teams played 82 games in the 2013 season except the Boston Celtics and Indiana Pacers. Their April 16 game was canceled due to the Boston Marathon bombing and was never rescheduled. The 2012 season was shortened due to a lockout, resulting in a 66 game season.</p>")
+
+caption_text <- c("TABLE: Bill Schmid @schmid_07 | Made with: {reactablefmtr} {reactable} | Data from: {hoopR} | ")
+
+div(
+  class = "table-wrap",
+  br(),
+  div(class = "table-title", title_text),
+  br(),
+  div(class = "table-sub", subtitle_text),
+  br(),
+  br(),
+  tbl,
+  div(class = "table-cap", footnote_text),
+  tags$img(
+    src = ima,
+    align = "right",
+    width = "25px",
+    height = "50px"
+  ),
+  br(),
+  div(
+    class = "table-cap", caption_text,
+    tags$a(
+      href = "https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/03/threes_twit.png",
+      target = "_blank", "Original Graph"
+    )
+  )
+)
+```
