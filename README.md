@@ -1,5 +1,11 @@
 # NBA R
 
+## Decline of Midrange Jumper
+
+### [README](https://github.com/schmid07/NBA-R/tree/main/plots/08) | [**Code - Table**](https://github.com/schmid07/NBA-R/blob/main/code/08_midrange_heat.r) 
+
+![plots/08/midrange.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/01/midrange.png)
+
 ## Team 3-pt FGA vs. 2-pt FGA (Interactive Table & Graph) (UPDATE)
 
 ### [README](https://github.com/schmid07/NBA-R/tree/main/plots/05) | [**Code - Table**](https://github.com/schmid07/NBA-R/blob/main/code/05_threes_vs_two_table_demo.Rmd) | [**Interactive Table**](https://schmid07.github.io/NBA-R/plots/05/05_threes_vs_two_table_demo.html)
