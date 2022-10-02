@@ -1,6 +1,6 @@
 # NBA R
 
-## Decline of Midrange Jumper
+## Decline of Midrange Jumpers
 
 ### [README](https://github.com/schmid07/NBA-R/tree/main/plots/08) | [**Code - Table**](https://github.com/schmid07/NBA-R/blob/main/code/08_midrange_heat.r) 
 
