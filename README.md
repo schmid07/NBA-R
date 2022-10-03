@@ -2,7 +2,7 @@
 
 ## Decline of Midrange Jumpers
 
-### [README](https://github.com/schmid07/NBA-R/tree/main/plots/08) | [**Code - Table**](https://github.com/schmid07/NBA-R/blob/main/code/08_midrange_heat.r) 
+### [README](https://github.com/schmid07/NBA-R/tree/main/plots/08) | [**Code - Table**](https://github.com/schmid07/NBA-R/blob/main/code/08_midrange_heat.R) 
 
 ![plots/08/midrange.png](https://raw.githubusercontent.com/schmid07/NBA-R/main/plots/08/midrange.png)
 
