@@ -3,7 +3,7 @@
 [**Code**](https://github.com/schmid07/NBA-R/blob/main/code/08_midrange_heat.R)
 
 This decline has been mostly offset by a large increase in 3-pt FGAs. In his book, the Midrange Theory,
-Seth Partnow notes that 66% of shots that were long twos in 2005 had been replaced by 3-pt FGA
+Seth Partnow notes that 66% of shots that were long twos in 2005 had been replaced by 3-pt FGAs
 in 2020. Partnow notes that the trend from long twos to 3-pt FGA was precipitated by a decline in
 shots outside the paint but shorter than 16 ft, with the reduction mostly occurring in postup plays.
 He cites two primary factors: 1) the emergence of perimeter oriented big men like KG and Dirk Nowitzki
